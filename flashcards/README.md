@@ -11,6 +11,9 @@ Double-click `index.html` to open it in your browser (or drag it into a browser 
 3. **Study**: click *Study*, then click the card (or press **Space**) to flip it.
    Use **← / →** or the buttons to move between cards. Turn on *Shuffle* to mix them up.
 
+**Starter decks**: under *Starter decks*, click *Add* next to **Periodic table** to get
+118 ready-made cards (symbol on the front; name, atomic number and family on the back).
+
 ## How it works
 
 - **HTML** describes the three screens (deck list, deck editor, study mode).

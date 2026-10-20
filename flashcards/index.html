@@ -177,6 +177,19 @@
       <ul id="deck-list" class="list"></ul>
       <p id="deck-empty" class="empty hidden">No decks yet. Create one above.</p>
     </div>
+
+    <h2 style="margin:24px 0 8px">Starter decks</h2>
+    <div class="panel">
+      <ul class="list">
+        <li>
+          <div class="grow">
+            <strong>Periodic table</strong>
+            <div class="muted">118 cards: symbol → name, atomic number, family</div>
+          </div>
+          <button id="add-periodic" class="small" type="button">Add</button>
+        </li>
+      </ul>
+    </div>
   </section>
 
   <!-- ===== Screen 2: edit one deck ===== -->
@@ -264,6 +277,65 @@ function sampleData() {
   };
 }
 
+// ---------------------------------------------------------------------
+// Starter deck: the periodic table.
+// Elements are listed in order, so position + 1 = atomic number.
+// ---------------------------------------------------------------------
+const ELEMENTS = `
+  H Hydrogen, He Helium, Li Lithium, Be Beryllium, B Boron, C Carbon, N Nitrogen,
+  O Oxygen, F Fluorine, Ne Neon, Na Sodium, Mg Magnesium, Al Aluminium, Si Silicon,
+  P Phosphorus, S Sulfur, Cl Chlorine, Ar Argon, K Potassium, Ca Calcium, Sc Scandium,
+  Ti Titanium, V Vanadium, Cr Chromium, Mn Manganese, Fe Iron, Co Cobalt, Ni Nickel,
+  Cu Copper, Zn Zinc, Ga Gallium, Ge Germanium, As Arsenic, Se Selenium, Br Bromine,
+  Kr Krypton, Rb Rubidium, Sr Strontium, Y Yttrium, Zr Zirconium, Nb Niobium,
+  Mo Molybdenum, Tc Technetium, Ru Ruthenium, Rh Rhodium, Pd Palladium, Ag Silver,
+  Cd Cadmium, In Indium, Sn Tin, Sb Antimony, Te Tellurium, I Iodine, Xe Xenon,
+  Cs Caesium, Ba Barium, La Lanthanum, Ce Cerium, Pr Praseodymium, Nd Neodymium,
+  Pm Promethium, Sm Samarium, Eu Europium, Gd Gadolinium, Tb Terbium, Dy Dysprosium,
+  Ho Holmium, Er Erbium, Tm Thulium, Yb Ytterbium, Lu Lutetium, Hf Hafnium,
+  Ta Tantalum, W Tungsten, Re Rhenium, Os Osmium, Ir Iridium, Pt Platinum, Au Gold,
+  Hg Mercury, Tl Thallium, Pb Lead, Bi Bismuth, Po Polonium, At Astatine, Rn Radon,
+  Fr Francium, Ra Radium, Ac Actinium, Th Thorium, Pa Protactinium, U Uranium,
+  Np Neptunium, Pu Plutonium, Am Americium, Cm Curium, Bk Berkelium, Cf Californium,
+  Es Einsteinium, Fm Fermium, Md Mendelevium, No Nobelium, Lr Lawrencium,
+  Rf Rutherfordium, Db Dubnium, Sg Seaborgium, Bh Bohrium, Hs Hassium, Mt Meitnerium,
+  Ds Darmstadtium, Rg Roentgenium, Cn Copernicium, Nh Nihonium, Fl Flerovium,
+  Mc Moscovium, Lv Livermorium, Ts Tennessine, Og Oganesson
+`.split(",").map((entry) => entry.trim().split(" "));
+
+// Which family each element belongs to, by atomic number.
+const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
+const CATEGORIES = {
+  "Reactive nonmetal": [1, 6, 7, 8, 15, 16, 34],
+  "Noble gas": [2, 10, 18, 36, 54, 86, 118],
+  "Alkali metal": [3, 11, 19, 37, 55, 87],
+  "Alkaline earth metal": [4, 12, 20, 38, 56, 88],
+  "Metalloid": [5, 14, 32, 33, 51, 52],
+  "Halogen": [9, 17, 35, 53, 85, 117],
+  "Post-transition metal": [13, 31, 49, 50, 81, 82, 83, 84, 113, 114, 115, 116],
+  "Transition metal": [...range(21, 30), ...range(39, 48), ...range(72, 80), ...range(104, 112)],
+  "Lanthanide": range(57, 71),
+  "Actinide": range(89, 103),
+};
+
+function categoryOf(atomicNumber) {
+  return Object.keys(CATEGORIES).find((name) => CATEGORIES[name].includes(atomicNumber));
+}
+
+const PERIODIC_DECK_NAME = "Periodic table (118 elements)";
+
+function periodicTableDeck() {
+  return {
+    id: makeId(),
+    name: PERIODIC_DECK_NAME,
+    cards: ELEMENTS.map(([symbol, name], i) => ({
+      id: makeId(),
+      front: symbol,
+      back: `${name}\nAtomic number ${i + 1}\n${categoryOf(i + 1)}`,
+    })),
+  };
+}
+
 function loadData() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -336,6 +408,11 @@ function renderDecks() {
     });
     list.append(el("li", {}, [el("div", { className: "grow" }, [open]), study]));
   }
+
+  // Only allow adding the starter deck once (until it's deleted).
+  const added = data.decks.some((d) => d.name === PERIODIC_DECK_NAME);
+  $("add-periodic").disabled = added;
+  $("add-periodic").textContent = added ? "Added" : "Add";
 }
 
 function renderDeck() {
@@ -451,6 +528,13 @@ $("new-deck-form").addEventListener("submit", (e) => {
   data.decks.push(deck);
   saveData();
   $("new-deck-name").value = "";
+  openDeck(deck.id);
+});
+
+$("add-periodic").addEventListener("click", () => {
+  const deck = periodicTableDeck();
+  data.decks.push(deck);
+  saveData();
   openDeck(deck.id);
 });
 
