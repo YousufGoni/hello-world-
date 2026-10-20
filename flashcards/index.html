@@ -180,15 +180,7 @@
 
     <h2 style="margin:24px 0 8px">Starter decks</h2>
     <div class="panel">
-      <ul class="list">
-        <li>
-          <div class="grow">
-            <strong>Periodic table</strong>
-            <div class="muted">118 cards: symbol → name, atomic number, family</div>
-          </div>
-          <button id="add-periodic" class="small" type="button">Add</button>
-        </li>
-      </ul>
+      <ul id="starter-list" class="list"></ul>
     </div>
   </section>
 
@@ -322,18 +314,89 @@ function categoryOf(atomicNumber) {
   return Object.keys(CATEGORIES).find((name) => CATEGORIES[name].includes(atomicNumber));
 }
 
-const PERIODIC_DECK_NAME = "Periodic table (118 elements)";
+function periodicTableCards() {
+  return ELEMENTS.map(([symbol, name], i) => ({
+    front: symbol,
+    back: `${name}\nAtomic number ${i + 1}\n${categoryOf(i + 1)}`,
+  }));
+}
 
-function periodicTableDeck() {
-  return {
-    id: makeId(),
-    name: PERIODIC_DECK_NAME,
-    cards: ELEMENTS.map(([symbol, name], i) => ({
-      id: makeId(),
-      front: symbol,
-      back: `${name}\nAtomic number ${i + 1}\n${categoryOf(i + 1)}`,
-    })),
-  };
+// ---------------------------------------------------------------------
+// Starter deck: AQA GCSE Combined Science (Trilogy) physics equations
+// that students must recall. Each entry: [front, equation, ...symbols].
+// ---------------------------------------------------------------------
+const PHYSICS_EQUATIONS = [
+  ["Weight", "W = m g",
+    "W = weight (N)", "m = mass (kg)", "g = gravitational field strength (N/kg)"],
+  ["Work done (from force and distance)", "W = F s",
+    "W = work done (J)", "F = force (N)", "s = distance moved along the line of action of the force (m)"],
+  ["Force on a spring", "F = k e",
+    "F = force (N)", "k = spring constant (N/m)", "e = extension (m)"],
+  ["Distance travelled (constant speed)", "s = v t",
+    "s = distance (m)", "v = speed (m/s)", "t = time (s)"],
+  ["Acceleration", "a = Δv / t",
+    "a = acceleration (m/s²)", "Δv = change in velocity (m/s)", "t = time (s)"],
+  ["Resultant force (Newton's second law)", "F = m a",
+    "F = resultant force (N)", "m = mass (kg)", "a = acceleration (m/s²)"],
+  ["Momentum (Higher tier only)", "p = m v",
+    "p = momentum (kg m/s)", "m = mass (kg)", "v = velocity (m/s)"],
+  ["Kinetic energy", "Ek = ½ m v²",
+    "Ek = kinetic energy (J)", "m = mass (kg)", "v = speed (m/s)"],
+  ["Gravitational potential energy", "Ep = m g h",
+    "Ep = gravitational potential energy (J)", "m = mass (kg)",
+    "g = gravitational field strength (N/kg)", "h = height (m)"],
+  ["Power (from energy and time)", "P = E / t",
+    "P = power (W)", "E = energy transferred (J)", "t = time (s)"],
+  ["Power (from work done and time)", "P = W / t",
+    "P = power (W)", "W = work done (J)", "t = time (s)"],
+  ["Efficiency (using energy)", "efficiency = useful output energy transfer / total input energy transfer",
+    "Both energies in J", "Gives a decimal: × 100 for a percentage"],
+  ["Efficiency (using power)", "efficiency = useful power output / total power input",
+    "Both powers in W", "Gives a decimal: × 100 for a percentage"],
+  ["Wave speed", "v = f λ",
+    "v = wave speed (m/s)", "f = frequency (Hz)", "λ = wavelength (m)"],
+  ["Charge flow", "Q = I t",
+    "Q = charge flow (C)", "I = current (A)", "t = time (s)"],
+  ["Potential difference (from current and resistance)", "V = I R",
+    "V = potential difference (V)", "I = current (A)", "R = resistance (Ω)"],
+  ["Power (from potential difference and current)", "P = V I",
+    "P = power (W)", "V = potential difference (V)", "I = current (A)"],
+  ["Power (from current and resistance)", "P = I² R",
+    "P = power (W)", "I = current (A)", "R = resistance (Ω)"],
+  ["Energy transferred (from power and time)", "E = P t",
+    "E = energy transferred (J)", "P = power (W)", "t = time (s)"],
+  ["Energy transferred (from charge and potential difference)", "E = Q V",
+    "E = energy transferred (J)", "Q = charge flow (C)", "V = potential difference (V)"],
+  ["Density", "ρ = m / V",
+    "ρ = density (kg/m³)", "m = mass (kg)", "V = volume (m³)"],
+];
+
+function physicsEquationCards() {
+  return PHYSICS_EQUATIONS.map(([front, ...backLines]) => ({ front, back: backLines.join("\n") }));
+}
+
+// All starter decks. To add another, add an entry here.
+const STARTER_DECKS = [
+  {
+    name: "Periodic table (118 elements)",
+    title: "Periodic table",
+    description: "118 cards: symbol → name, atomic number, family",
+    build: periodicTableCards,
+  },
+  {
+    name: "AQA GCSE Physics equations (Combined Science)",
+    title: "AQA GCSE Physics equations",
+    description: `${PHYSICS_EQUATIONS.length} cards: the Combined Science equations you must memorise`,
+    build: physicsEquationCards,
+  },
+];
+
+function addStarterDeck(starter) {
+  const cards = starter.build().map((card) => ({ id: makeId(), ...card }));
+  const deck = { id: makeId(), name: starter.name, cards };
+  data.decks.push(deck);
+  saveData();
+  openDeck(deck.id);
 }
 
 function loadData() {
@@ -409,10 +472,21 @@ function renderDecks() {
     list.append(el("li", {}, [el("div", { className: "grow" }, [open]), study]));
   }
 
-  // Only allow adding the starter deck once (until it's deleted).
-  const added = data.decks.some((d) => d.name === PERIODIC_DECK_NAME);
-  $("add-periodic").disabled = added;
-  $("add-periodic").textContent = added ? "Added" : "Add";
+  // Starter decks can each be added once (until deleted).
+  const starters = $("starter-list");
+  starters.replaceChildren();
+  for (const starter of STARTER_DECKS) {
+    const added = data.decks.some((d) => d.name === starter.name);
+    const text = el("div", { className: "grow" }, [
+      el("strong", { textContent: starter.title }),
+      el("div", { className: "muted", textContent: starter.description }),
+    ]);
+    const add = el("button", {
+      type: "button", className: "small", textContent: added ? "Added" : "Add",
+      disabled: added, onclick: () => addStarterDeck(starter),
+    });
+    starters.append(el("li", {}, [text, add]));
+  }
 }
 
 function renderDeck() {
@@ -528,13 +602,6 @@ $("new-deck-form").addEventListener("submit", (e) => {
   data.decks.push(deck);
   saveData();
   $("new-deck-name").value = "";
-  openDeck(deck.id);
-});
-
-$("add-periodic").addEventListener("click", () => {
-  const deck = periodicTableDeck();
-  data.decks.push(deck);
-  saveData();
   openDeck(deck.id);
 });
 

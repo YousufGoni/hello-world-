@@ -11,8 +11,11 @@ Double-click `index.html` to open it in your browser (or drag it into a browser 
 3. **Study**: click *Study*, then click the card (or press **Space**) to flip it.
    Use **← / →** or the buttons to move between cards. Turn on *Shuffle* to mix them up.
 
-**Starter decks**: under *Starter decks*, click *Add* next to **Periodic table** to get
-118 ready-made cards (symbol on the front; name, atomic number and family on the back).
+**Starter decks**: under *Starter decks*, click *Add* to get a ready-made deck:
+
+- **Periodic table**: 118 cards (symbol on the front; name, atomic number and family on the back).
+- **AQA GCSE Physics equations**: the 21 equations you must memorise for AQA Combined Science: Trilogy
+  (the quantity on the front; the equation plus each symbol and its unit on the back).
 
 ## How it works
 
